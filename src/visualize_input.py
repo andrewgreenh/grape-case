@@ -51,22 +51,24 @@ def showcase_augmentations():
 
 def showcase_base_data_counts():
     counts = np.sort(Y_one_pixel.sum(axis=(1, 2)))[::-1]
+    min = np.floor(np.min(counts) / 50) * 50 - 50
+    max = np.ceil(np.max(counts) / 50) * 50 + 50
     plt.subplot(121)
     plt.plot(counts)
-    plt.axis([None, None, 90, 510])
+    plt.axis([None, None, min, max])
     plt.ylabel('Anzahl Beeren')
     plt.xlabel('Bildindex')
 
     plt.subplot(122)
-    plt.hist(counts, bins=8, range=(100, 500),
+    plt.hist(counts, bins=int(np.ceil((max - min) / 50)), range=(min, max),
              histtype='stepfilled', orientation='horizontal')
 
-    plt.axis([None, None, 90, 510])
+    plt.axis([None, None, min, max])
     plt.ylabel('Anzahl Beeren')
     plt.xlabel('Anzahl Bilder')
     plt.show()
 
 
-showcase_base_data()
-showcase_augmentations()
+# showcase_base_data()
+# showcase_augmentations()
 showcase_base_data_counts()
