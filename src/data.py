@@ -6,13 +6,18 @@ import time
 from scipy import ndimage
 from skimage.transform import resize
 
+_data_pairs_cache = None
 
-def load_grape_data():
+data_directory = (Path(__file__).parent / '../data/A').resolve()
+
+
+def load_grape_data(transform_data=None):
     """Load the basic annotated images and their respective annotations
     Returns a tuple (images, annotations) where images is an ndarray with shape (1080, 1080, 3) and
     annotations is an ndarray with shape (1080, 1080) where each pixel that is the center of a grape
     has a one, while the rest has a 0.
     """
+
     def load_image(path):
         # green bar at the bottom of the files needs to be removed.
         return imageio.imread(path)[:-10, :, :]
@@ -33,37 +38,38 @@ def load_grape_data():
     def image_name_to_annotation(img):
         return data_directory / (img.stem + '.annotations.txt')
 
-    data_directory = (Path(__file__).parent / '../data/A').resolve()
+    def load_data_pairs():
+        global _data_pairs_cache
+        if _data_pairs_cache is None:
+            # Generator of pairs of img_filename and annotation_filename
+            file_pairs = ([img, image_name_to_annotation(img)] for img in data_directory.glob('*.jpg')
+                          if image_name_to_annotation(img).exists())
+            _data_pairs_cache = list(map(load_files, file_pairs))
+        return _data_pairs_cache
 
-    # Generator of pairs of img_filename and annotation_filename
-    file_pairs = ([img, image_name_to_annotation(img)] for img in data_directory.glob('*.jpg')
-                  if image_name_to_annotation(img).exists())
+    data_pairs = load_data_pairs()
 
-    data_pairs = list(map(load_files, file_pairs))
+    transformed_data_pairs = list(data_pairs) if transform_data is None else list(
+        map(transform_data, data_pairs))
 
-    images = np.array(list(map(lambda pair: pair[0], data_pairs)))
-    annotations = np.array(list(map(lambda pair: pair[1], data_pairs)))
+    images = np.array(list(map(lambda pair: pair[0], transformed_data_pairs)))
+    annotations = np.array(
+        list(map(lambda pair: pair[1], transformed_data_pairs)))
 
-    unused_count, height, width, unused_channels = images.shape
+    unused_count, height, width, *_ = images.shape
     offset = int((width - height) / 2)
 
     # Crop the center square of the images and annotations
-    images = images[:, :, offset:-offset, :]
+    images = images[:, :, offset:-offset, ...]
     annotations = annotations[:, :, offset:-offset]
 
     return images, annotations
 
 
-def blur_annotations(annotations):
-    return np.array([blur_annotation(annotation) for annotation in annotations])
-
-
-def blur_annotation(annotation):
-    return ndimage.gaussian_filter(annotation, sigma=10, mode="constant")
-
-
 class Augmentor:
-    def __init__(self):
+    def __init__(self, base_data=None):
+        if base_data is None:
+            base_data = load_grape_data()
         self.rotation_transforms = [self.rotate(deg) for deg in range(-10, 11)]
         self.flip_transforms = [self.flip(True), self.flip(False)]
         self.zoom_and_crop_transforms = []
@@ -81,7 +87,7 @@ class Augmentor:
             [self.rotate(-10), self.rotate(10)],
             [self.zoom_and_crop(1.4, 0, 0), self.zoom_and_crop(1.4, 1, 1)],
         ]
-        self.base_data = load_grape_data()
+        self.base_data = base_data
         self.base_data_count = len(self.base_data[0])
         self.augmented_count = self.base_data_count * self.transform_count
 
