@@ -69,7 +69,7 @@ def showcase_base_data_counts(data):
            f'(ø {int(np.sum(Y) / len(Y))})'
            ))
 
-    counts = np.sort(Y.sum(axis=(1, 2)))[::-1]
+    counts = Y.sum(axis=(1, 2))
     min = 0
     max = (np.ceil((np.max(counts) + 1) / 50)) * 50 + 50
     plt.subplot(121)
