@@ -4,12 +4,13 @@ import math
 import imageio
 import numpy as np
 from scipy import ndimage
-from skimage import color
+from skimage import color, exposure
 from skimage.transform import resize
 
 _data_pairs_cache = None
 
 data_directory = (Path(__file__).parent / '../data/A').resolve()
+target_img_size = 300
 
 
 def load_grape_data(sub_img_count=1):
@@ -34,7 +35,11 @@ def load_grape_data(sub_img_count=1):
         # green bar at the bottom of the files needs to be removed.
         without_green = imageio.imread(path)[:-10, :, :]
         grey_scale = color.rgb2grey(without_green)
-        return grey_scale
+        img_cummulated_distribution_function, bin_centers = exposure.cumulative_distribution(
+            grey_scale)
+        normalized = np.interp(grey_scale, bin_centers,
+                               img_cummulated_distribution_function)
+        return normalized
 
     def load_annotations(path, img):
         file = open(path)
@@ -71,10 +76,23 @@ def load_grape_data(sub_img_count=1):
     images = images[:, :, offset:-offset]
     locations = locations[:, :, offset:-offset]
 
+    def scale(img): return resize(img, (target_img_size, target_img_size),
+                                  anti_aliasing=True, mode='constant')
+
+    def scale_annotation(annotation):
+        factor = target_img_size / len(annotation)
+        new_annotation = np.zeros((target_img_size, target_img_size))
+        for y, x in zip(*np.nonzero(annotation)):
+            new_annotation[int(y * factor)][int(x * factor)
+                                            ] += annotation[y, x]
+        return new_annotation
+
     # Split images into equal sized blocks
-    images = np.array([block for img in images for block in to_blocks(img)])
+    images = np.array([scale(block)
+                       for img in images for block in to_blocks(img)])
+
     locations = np.array(
-        [block for loc in locations for block in to_blocks(loc)])
+        [scale_annotation(block) for loc in locations for block in to_blocks(loc)])
     density = np.array([density_map(loc) for loc in locations])
     counts = np.sum(locations, axis=(1, 2))
 
@@ -82,7 +100,7 @@ def load_grape_data(sub_img_count=1):
 
 
 def density_map(locations):
-    return ndimage.gaussian_filter(locations, sigma=10, mode="constant")
+    return ndimage.gaussian_filter(locations, sigma=5, mode="constant")
 
 
 if __name__ == "__main__":

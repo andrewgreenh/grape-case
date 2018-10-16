@@ -65,11 +65,6 @@ def showcase_augmentations(augmentor):
 def showcase_base_data_counts(data):
     _, _, Y_counts = data
 
-    print((f'{len(Y_counts)} base images with '
-           f'{np.sum(Y_counts)} annotations. '
-           f'(ø {int(np.sum(Y_counts) / len(Y_counts))})'
-           ))
-
     counts = np.sort(Y_counts)
     min = 0
     max = (np.ceil((np.max(counts) + 1) / 50)) * 50 + 50
@@ -93,20 +88,23 @@ print('Loading data...')
 print('Loading full pictures...')
 full_pictures = load_grape_data()
 print(
-    f'{full_pictures[0].shape[0]} images with {np.sum(full_pictures[2])} annotations loaded.')
+    f'{len(full_pictures[0])} images with {np.sum(full_pictures[2])} annotations loaded. (ø{int(np.sum(full_pictures[2]) / len(full_pictures[0]))})')
 print(full_pictures[2].shape)
+
+
 print('Loading split pictures...')
 split_pictures = load_grape_data(16)
+
 print(
-    f'{split_pictures[0].shape[0]} images with {np.sum(split_pictures[2])} annotations loaded.')
+    f'{len(split_pictures[0])} images with {np.sum(split_pictures[2])} annotations loaded. (ø{int(np.sum(split_pictures[2]) / len(split_pictures[0]))})')
 print(split_pictures[2].shape)
 
 
 showcase_base_data(full_pictures)
 showcase_base_data_counts(full_pictures)
 
-augmentor = Augmentor(full_pictures)
-showcase_augmentations(augmentor)
-
 showcase_split_data(split_pictures)
 showcase_base_data_counts(split_pictures)
+
+augmentor = Augmentor(full_pictures)
+showcase_augmentations(augmentor)
