@@ -87,8 +87,11 @@ def showcase_base_data_counts(data):
 print('Loading data...')
 print('Loading full pictures...')
 full_pictures = load_grape_data()
+print(min(full_pictures[2]), max(full_pictures[2]))
 print(
     f'{len(full_pictures[0])} images with {np.sum(full_pictures[2])} annotations loaded. (ø{int(np.sum(full_pictures[2]) / len(full_pictures[0]))})')
+print(full_pictures[0].shape)
+print(full_pictures[1].shape)
 print(full_pictures[2].shape)
 
 
@@ -97,6 +100,8 @@ split_pictures = load_grape_data(16)
 
 print(
     f'{len(split_pictures[0])} images with {np.sum(split_pictures[2])} annotations loaded. (ø{int(np.sum(split_pictures[2]) / len(split_pictures[0]))})')
+print(split_pictures[0].shape)
+print(split_pictures[1].shape)
 print(split_pictures[2].shape)
 
 

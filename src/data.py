@@ -10,10 +10,9 @@ from skimage.transform import resize
 _data_pairs_cache = None
 
 data_directory = (Path(__file__).parent / '../data/A').resolve()
-target_img_size = 300
 
 
-def load_grape_data(sub_img_count=1):
+def load_grape_data(sub_img_count=1, target_img_size=227):
     """Load the basic annotated images and their respective annotations
     Returns a tuple (images, density, counts) where images and density are ndarrays with shape (100, 1080, 1080) and
     counts is an ndarray with shape (100).
