@@ -46,7 +46,8 @@ def showcase_split_data(data):
 
 def showcase_augmentations(augmentor):
     X, Y, _ = augmentor.base_data
-    print(f'{augmentor.transform_count} transformations generate {augmentor.transform_count * len(X)} annotated images.')
+    print('%s transformations generate %s annotated images.' %
+          (augmentor.transform_count, augmentor.transform_count * len(X)))
 
     _, subplots = plt.subplots(len(augmentor.annotation_showcase[0]),
                                len(augmentor.annotation_showcase))
@@ -89,7 +90,7 @@ print('Loading full pictures...')
 full_pictures = load_grape_data()
 print(min(full_pictures[2]), max(full_pictures[2]))
 print(
-    f'{len(full_pictures[0])} images with {np.sum(full_pictures[2])} annotations loaded. (ø{int(np.sum(full_pictures[2]) / len(full_pictures[0]))})')
+    '%s images with %s annotations loaded. (ø%s)' % (len(full_pictures[0]), np.sum(full_pictures[2]), int(np.sum(full_pictures[2]) / len(full_pictures[0]))))
 print(full_pictures[0].shape)
 print(full_pictures[1].shape)
 print(full_pictures[2].shape)
@@ -99,7 +100,7 @@ print('Loading split pictures...')
 split_pictures = load_grape_data(16)
 
 print(
-    f'{len(split_pictures[0])} images with {np.sum(split_pictures[2])} annotations loaded. (ø{int(np.sum(split_pictures[2]) / len(split_pictures[0]))})')
+    '%s images with %s annotations loaded. (ø%s)' % (len(split_pictures[0]), np.sum(split_pictures[2]), int(np.sum(split_pictures[2]) / len(split_pictures[0]))))
 print(split_pictures[0].shape)
 print(split_pictures[1].shape)
 print(split_pictures[2].shape)

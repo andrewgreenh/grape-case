@@ -12,7 +12,7 @@ _data_pairs_cache = None
 data_directory = (Path(__file__).parent / '../data/A').resolve()
 
 
-def load_grape_data(sub_img_count=1, target_img_size=227):
+def load_grape_data(sub_img_count=1, target_img_size=300):
     """Load the basic annotated images and their respective annotations
     Returns a tuple (images, density, counts) where images and density are ndarrays with shape (100, 1080, 1080) and
     counts is an ndarray with shape (100).
@@ -41,7 +41,7 @@ def load_grape_data(sub_img_count=1, target_img_size=227):
         return normalized
 
     def load_annotations(path, img):
-        file = open(path)
+        file = open(str(path))
         annotations = np.empty(img.shape[:2])
         for line in file:
             x, y = line.split(' ')
