@@ -95,7 +95,7 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
     density = np.array([density_map(loc) for loc in locations])
     counts = np.sum(locations, axis=(1, 2))
 
-    return images, density, counts
+    return images, density, counts, locations
 
 
 def density_map(locations):
@@ -103,7 +103,8 @@ def density_map(locations):
 
 
 if __name__ == "__main__":
-    X, Y_locations, Y_counts = load_grape_data(16)
+    X, Y_density, Y_counts, Y_locations = load_grape_data(16)
     print(X.shape)
     print(Y_locations.shape)
     print(Y_counts.shape)
+    print(Y_locations.shape)
