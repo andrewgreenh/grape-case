@@ -1,3 +1,6 @@
 __pycache__/
 .vscode/
 *.npy
+*.hdf5
+*history.txt
+results/
