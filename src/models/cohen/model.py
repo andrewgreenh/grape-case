@@ -5,7 +5,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2
 shape = (320, 320, 1)
 
 
-def build_model(path_to_weights=None):
+def build_model():
     inputs = Input(shape=shape)
 
     conv1 = Convolution2D(filters=64, kernel_size=3,
