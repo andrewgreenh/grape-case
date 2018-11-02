@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import ndimage
+from data import density_map
 
 
 class Augmentor:
@@ -63,9 +64,34 @@ class Augmentor:
     def get_data_point(self, index):
         img_index = int(index / self.transform_count)
         t_index = index % self.transform_count
-        x = self.base_data[0][img_index]
-        y = self.base_data[1][img_index]
+        image = self.base_data[0][img_index]
+        locations = self.base_data[3][img_index]
+
         t = self.get_transformation(t_index)
 
-        tx, ty = t(x), t(y)
-        return tx, ty, np.sum(ty)
+        t_image = t(image)
+        t_locations = t(locations)
+        t_density = density_map([t_locations])[0]
+        t_count = np.sum(t_locations)
+
+        return t_image, t_density, t_count, t_locations
+
+    def augmentation_generator(self, batch_size, get_x, get_y):
+        current_batch_x = []
+        current_batch_y = []
+        for i in range(self.augmented_count):
+            point = self.get_data_point(i)
+            current_batch_x.append(get_x(point))
+            current_batch_y.append(get_y(point))
+            if (len(current_batch_x) == batch_size):
+                X_array = np.array(current_batch_x)
+                X_array = X_array.reshape((*X_array.shape, 1))
+                Y_array = np.array(current_batch_y)
+                yield (X_array, Y_array)
+                current_batch_x, current_batch_y = [], []
+
+        if (len(current_batch_x) != 0):
+            X_array = np.array(current_batch_x)
+            X_array = X_array.reshape((*X_array.shape, 1))
+            Y_array = np.array(current_batch_y)
+            yield (X_array, Y_array)

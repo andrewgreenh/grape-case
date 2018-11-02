@@ -1,5 +1,5 @@
 from helpers import now
-ms_until_stop = 3 * 60 * 1000
+ms_until_stop = 10 * 60 * 1000
 stop_at_ms = now() + ms_until_stop
 
 from numpy.random import seed

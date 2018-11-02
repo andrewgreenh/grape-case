@@ -8,6 +8,7 @@ from keras.callbacks import CSVLogger, ModelCheckpoint
 from keras.models import load_model
 
 from data import load_grape_data
+from Augmentation import Augmentor
 
 from .model import build_model, shape
 
@@ -16,7 +17,8 @@ directory = (Path(__file__).parent).resolve()
 
 def train(persistence_directory, stop_at_ms):
     print('Loading data')
-    X, Y = get_data(persistence_directory)
+    data = get_data(persistence_directory)
+    X, _, Y, _ = data
 
     training_state = get_training_state(persistence_directory)
 
@@ -36,20 +38,27 @@ def train(persistence_directory, stop_at_ms):
             split += 1
             continue
 
+        X_test, Y_test = X[test].reshape((*X[test].shape, 1)), Y[test]
+
         model = get_model(persistence_directory, split)
         logger = CSVLogger(
             str(persistence_directory / ('split-%s-history.txt' % split)), separator=';', append=True)
         last_checkpoint = ModelCheckpoint(
             str(persistence_directory / ('split-%s-weights.h5' % split)))
 
+        augmentor = get_augmentor(data, train)
+
         for epoch in range(15):
             if epoch in training_state['finished_epochs']:
                 print('Training epoch %s already done, skipping' % epoch)
                 continue
 
+            generator = augmentor.augmentation_generator(
+                32, lambda data: data[0], lambda data: data[2])
+
             start = now()
-            model.fit(X[train], Y[train], batch_size=32, epochs=1,
-                      validation_data=(X[test], Y[test]), callbacks=[logger, last_checkpoint])
+            model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.transform_count / 32), epochs=1,
+                                callbacks=[logger, last_checkpoint], validation_data=(X_test, Y_test))
             training_state['finished_epochs'].add(epoch)
             persist_training_state(persistence_directory, training_state)
 
@@ -74,19 +83,24 @@ def train(persistence_directory, stop_at_ms):
 
 
 def get_data(persistence_directory):
-    path_to_X = str(persistence_directory / 'simple_X.npy')
-    path_to_Y = str(persistence_directory / 'simple_Y.npy')
+    images_path = str(persistence_directory / 'simple_images.npy')
+    densities_path = str(persistence_directory / 'simple_densities.npy')
+    counts_path = str(persistence_directory / 'simple_counts.npy')
+    locations_path = str(persistence_directory / 'simple_locations.npy')
     try:
-        X = np.load(path_to_X)
-        Y = np.load(path_to_Y)
-        return X, Y
+        images = np.load(images_path)
+        densities = np.load(densities_path)
+        counts = np.load(counts_path)
+        locations = np.load(locations_path)
+        return images, densities, counts, locations
     except IOError:
         print('persisted data not found, rebuilding...')
-        X, _, Y, _ = load_grape_data(1, shape[0])
-        X.resize((X.shape[0], *shape))
-        np.save(path_to_X, X)
-        np.save(path_to_Y, Y)
-        return X, Y
+        data = load_grape_data(1, shape[0])
+        np.save(images_path, data[0])
+        np.save(densities_path, data[1])
+        np.save(counts_path, data[2])
+        np.save(locations_path, data[3])
+        return data
 
 
 def get_training_state(persistence_directory):
@@ -105,3 +119,10 @@ def get_model(persistence_directory, split):
         return load_model(str(persistence_directory / ('split-%s-weights.h5' % split)))
     except IOError:
         return build_model()
+
+
+def get_augmentor(data, training_indices):
+    i = training_indices
+    images, density, counts, locations = data
+    training_data = images[i], density[i], counts[i], locations[i]
+    return Augmentor(training_data)

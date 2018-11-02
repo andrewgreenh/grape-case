@@ -2,7 +2,7 @@ from keras.models import Model
 from keras.layers import Input, Flatten, Dense, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 
-shape = (128, 128, 1)
+shape = (64, 64, 1)
 
 
 def build_model():
