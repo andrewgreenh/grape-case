@@ -65,8 +65,8 @@ class Augmentor:
         return lambda img: flip_tranform(rotation_transform(zoom_transform(img)))
 
     def get_data_point(self, index):
-        img_index = int(index / self.transform_count)
-        t_index = index % self.transform_count
+        img_index = index % self.base_data_count
+        t_index = int(index / self.base_data_count)
         image = self.base_data[0][img_index]
         locations = self.base_data[3][img_index]
 

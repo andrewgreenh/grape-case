@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from keras.callbacks import CSVLogger, ModelCheckpoint
 from keras.models import load_model
 from sklearn.model_selection import KFold
@@ -9,11 +10,13 @@ from helpers import now
 
 
 class Trainer:
-    def __init__(self, persistence_directory, image_split, image_size, get_validation_data, build_model, get_x, get_y):
-        self.get_validation_data = get_validation_data
+    def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, get_x, get_y, get_count_from_y, custom_objects={}):
+        self.get_data = get_data
         self.build_model = build_model
         self.get_x = get_x
         self.get_y = get_y
+        self.get_count_from_y = get_count_from_y
+        self.custom_objects = custom_objects
 
         self.persistence_directory = persistence_directory
         self.data = _get_data(persistence_directory, image_split, image_size)
@@ -30,7 +33,9 @@ class Trainer:
                 split += 1
                 continue
 
-            validation_data = self.get_validation_data(self.data, test)
+            X, Y = self.get_data(self.data)
+
+            validation_data = X[test], Y[test]
 
             model = self.get_model(split)
             callbacks = self.get_callbacks(split)
@@ -48,7 +53,7 @@ class Trainer:
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.transform_count / 32), epochs=1,
+                model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.augmented_count / 32 / augmentor.transform_count * 60), epochs=1,
                                     callbacks=callbacks, validation_data=validation_data)
                 self.training_state['finished_epochs'].add(epoch)
                 self.persist_training_state()
@@ -65,6 +70,8 @@ class Trainer:
                     print('%s epochs time remaining, continuing' %
                           how_many_epochs_remaining)
 
+            self.persist_split_results(model, X, Y, train, test, split)
+
             self.training_state['finished_splits'].add(split)
             self.training_state['finished_epochs'] = set()
             self.persist_training_state()
@@ -80,7 +87,7 @@ class Trainer:
 
     def get_model(self, split):
         try:
-            return load_model(str(self.persistence_directory / ('split-%s-weights.h5' % split)))
+            return load_model(str(self.persistence_directory / ('split-%s-weights.h5' % split)), custom_objects=self.custom_objects)
         except IOError:
             return self.build_model()
 
@@ -96,6 +103,21 @@ class Trainer:
         images, density, counts, locations = self.data
         training_data = images[i], density[i], counts[i], locations[i]
         return Augmentor(training_data)
+
+    def persist_split_results(self, model, X, Y, train, test, split):
+        Y_pred = model.predict(X)
+        pred_count = self.get_count_from_y(Y_pred)
+        true_count = self.get_count_from_y(Y)
+
+        table_data = np.array([pred_count, true_count]).transpose()
+
+        data_frame = pd.DataFrame(
+            table_data, columns=['pred count', 'true count'])
+
+
+        data_frame['Is in Training'] = data_frame.index.isin(train)
+        data_frame.to_csv(str(self.persistence_directory /
+                              ('split-%s-result.txt' % split)))
 
     def persist_training_state(self):
         np.save(str(self.persistence_directory /

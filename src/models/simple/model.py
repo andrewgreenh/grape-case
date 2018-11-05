@@ -1,8 +1,10 @@
+import numpy as np
+from keras.layers import Dense, Dropout, Flatten, Input
+from keras.layers.convolutional import (Convolution2D, MaxPooling2D,
+                                        ZeroPadding2D)
 from keras.models import Model
-from keras.layers import Input, Flatten, Dense, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 
-shape = (64, 64, 1)
+shape = (32, 32, 1)
 
 
 def build_model():
@@ -33,6 +35,20 @@ def build_model():
     model = Model(inputs=inputs, outputs=prediction)
 
     model.compile(optimizer='adam', loss='mean_squared_error',
-                  metrics=['mae', 'mse'])
+                  metrics=['mae', 'mse', relative_predictions, absolute_precentage_error])
 
     return model
+
+
+def relative_predictions(y_true, y_pred):
+    return y_pred / (y_true + 1)
+
+
+def absolute_precentage_error(y_true, y_pred):
+    return np.absolute(1 - y_pred / (y_true + 1))
+
+
+custom_objects = {
+    'relative_predictions': relative_predictions,
+    'absolute_precentage_error': absolute_precentage_error
+}

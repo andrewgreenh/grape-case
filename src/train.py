@@ -28,7 +28,7 @@ trainers_by_name = {
     'wang_split': wang_split_trainer,
 }
 
-name = 'wang'
+name = 'simple'
 
 model_directory = Path(__file__).parent.parent / 'results' / name
 model_directory.mkdir(parents=True, exist_ok=True)
