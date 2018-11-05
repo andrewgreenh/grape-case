@@ -2,6 +2,9 @@ import numpy as np
 from scipy import ndimage
 from data import density_map
 
+import warnings
+warnings.filterwarnings('ignore', '.*output shape of zoom.*')
+
 
 class Augmentor:
     def __init__(self, base_data):
