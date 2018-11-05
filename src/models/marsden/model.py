@@ -35,4 +35,7 @@ def build_model():
 
     model = Model(inputs=inputs, outputs=prediction)
 
+    model.compile(optimizer='adam', loss='mean_squared_error',
+                  metrics=['mae', 'mse'])
+
     return model

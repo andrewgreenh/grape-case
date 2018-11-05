@@ -2,14 +2,16 @@ from keras.models import Model
 from keras.layers import Input, Flatten, Dense, Dropout, concatenate
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 
-shape = (320, 320, 1)
+shape = (256, 256, 1)
 
 
 def build_model():
     inputs = Input(shape=shape)
 
+    padded_inputs = ZeroPadding2D(padding=32)(inputs)
+
     conv1 = Convolution2D(filters=64, kernel_size=3,
-                          strides=1, padding='valid', activation='relu')(inputs)
+                          strides=1, padding='valid', activation='relu')(padded_inputs)
 
     inc1 = Inception(16, 16)(conv1)
 
@@ -34,6 +36,9 @@ def build_model():
                                strides=1, padding='valid', activation='relu')(conv5)
 
     model = Model(inputs=inputs, outputs=prediction)
+
+    model.compile(optimizer='adam', loss='mean_squared_error',
+                  metrics=['mae', 'mse'])
 
     return model
 

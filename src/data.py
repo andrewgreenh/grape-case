@@ -78,20 +78,12 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
     def scale(img): return resize(img, (target_img_size, target_img_size),
                                   anti_aliasing=True, mode='constant')
 
-    def scale_annotation(annotation):
-        factor = target_img_size / len(annotation)
-        new_annotation = np.zeros((target_img_size, target_img_size))
-        for y, x in zip(*np.nonzero(annotation)):
-            new_annotation[int(y * factor)][int(x * factor)
-                                            ] += annotation[y, x]
-        return new_annotation
-
     # Split images into equal sized blocks
     images = np.array([scale(block)
                        for img in images for block in to_blocks(img)])
 
     locations = np.array(
-        [scale_annotation(block) for loc in locations for block in to_blocks(loc)])
+        [scale_annotation(block, target_img_size) for loc in locations for block in to_blocks(loc)])
     density = np.array([density_map(loc) for loc in locations])
     counts = np.sum(locations, axis=(1, 2))
 
@@ -100,6 +92,15 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
 
 def density_map(locations):
     return ndimage.gaussian_filter(locations, sigma=5, mode="constant")
+
+
+def scale_annotation(annotation, target_size):
+    factor = target_size / len(annotation)
+    new_annotation = np.zeros((target_size, target_size))
+    for y, x in zip(*np.nonzero(annotation)):
+        new_annotation[int(y * factor)][int(x * factor)
+                                        ] += annotation[y, x]
+    return new_annotation
 
 
 if __name__ == "__main__":
