@@ -22,7 +22,7 @@ class Trainer:
     def start_training(self, stop_at_ms):
         self.print_start_summary()
 
-        kf = KFold(n_splits=5)
+        kf = KFold(n_splits=5, shuffle=True, random_state=1)
         split = 0
         for train, test in kf.split(self.data[0]):
             if split in self.training_state['finished_splits']:
