@@ -70,7 +70,8 @@ class Trainer:
                     print('%s epochs time remaining, continuing' %
                           how_many_epochs_remaining)
 
-            self.persist_split_results(model, X, Y, train, test, split)
+            self.persist_split_counts(model, X, Y, train, test, split)
+            self.persist_split_validation_predictions(model, X, Y, test, split)
 
             self.training_state['finished_splits'].add(split)
             self.training_state['finished_epochs'] = set()
@@ -104,7 +105,8 @@ class Trainer:
         training_data = images[i], density[i], counts[i], locations[i]
         return Augmentor(training_data)
 
-    def persist_split_results(self, model, X, Y, train, test, split):
+    def persist_split_counts(self, model, X, Y, train, test, split):
+        print('Persisting split counts')
         Y_pred = model.predict(X)
         pred_count = self.get_count_from_y(Y_pred)
         true_count = self.get_count_from_y(Y)
@@ -114,10 +116,21 @@ class Trainer:
         data_frame = pd.DataFrame(
             table_data, columns=['pred count', 'true count'])
 
-
         data_frame['Is in Training'] = data_frame.index.isin(train)
         data_frame.to_csv(str(self.persistence_directory /
-                              ('split-%s-result.txt' % split)))
+                              ('split-%s-counts.txt' % split)))
+        print('Persisting split counts done.')
+
+    def persist_split_validation_predictions(self, model, X, Y, test, split):
+        print('Persisting split validation predictions')
+        Y_pred = model.predict(X)
+
+        data = np.array([Y, Y_pred])
+
+        np.save(str(self.persistence_directory /
+                    ('split-%s-validation-predictions.npy' % split)), data)
+
+        print('Persisting split validation predictions done.')
 
     def persist_training_state(self):
         np.save(str(self.persistence_directory /
@@ -125,10 +138,10 @@ class Trainer:
 
 
 def _get_data(persistence_directory, image_split, image_size):
-    images_path = str(persistence_directory / 'simple_images.npy')
-    densities_path = str(persistence_directory / 'simple_densities.npy')
-    counts_path = str(persistence_directory / 'simple_counts.npy')
-    locations_path = str(persistence_directory / 'simple_locations.npy')
+    images_path = str(persistence_directory / 'images.npy')
+    densities_path = str(persistence_directory / 'densities.npy')
+    counts_path = str(persistence_directory / 'counts.npy')
+    locations_path = str(persistence_directory / 'locations.npy')
     try:
         images = np.load(images_path)
         densities = np.load(densities_path)

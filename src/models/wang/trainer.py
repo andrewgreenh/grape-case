@@ -1,3 +1,5 @@
+import numpy as np
+
 from Trainer import Trainer
 
 from .model import build_model, shape
@@ -6,10 +8,9 @@ _image_split = 1
 _image_size = shape[0]
 
 
-def _get_validation_data(data, testing_indices):
+def _get_data(data):
     X, _, Y, _ = data
-    X_test = X[testing_indices]
-    return X_test.reshape((*X_test.shape, 1)), Y[testing_indices]
+    return X.reshape((*X.shape, 1)), Y.reshape((*Y.shape, 1))
 
 
 def _build_model():
@@ -24,5 +25,9 @@ def _get_y(data):
     return data[2]
 
 
+def _get_count_from_y(Y):
+    return np.sum(Y, axis=1)
+
+
 def get_trainer(persistence_directory):
-    return Trainer(persistence_directory, _image_split, _image_size, _get_validation_data, _build_model, _get_x, _get_y)
+    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, _get_x, _get_y, _get_count_from_y)
