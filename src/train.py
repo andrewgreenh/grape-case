@@ -42,6 +42,8 @@ parser.add_argument('--epochs', default=15, type=int,
                     help='Number of epochs to train')
 parser.add_argument('--image-number-cap', default=math.inf,
                     type=int, help="Max. Number of images to train on per epoch")
+parser.add_argument('--multi-processing', default=False, type=bool,
+                    help="Should multithreading be used for data augmentation")
 
 args = parser.parse_args()
 
@@ -52,6 +54,7 @@ model_name = args.model_name
 persistence_directory = args.persistence_directory
 epochs = args.epochs
 image_number_cap = args.image_number_cap
+multi_processing = args.multi_processing
 
 from helpers import now
 stop_at_ms = now() + ms_until_stop
@@ -64,4 +67,4 @@ print(model_directory)
 
 trainer = trainers_by_name[model_name].get_trainer(model_directory)
 
-trainer.start_training(stop_at_ms, epochs, image_number_cap)
+trainer.start_training(stop_at_ms, epochs, image_number_cap, multi_processing)

@@ -1,6 +1,8 @@
 import numpy as np
+import math
 from scipy import ndimage
 from data import density_map
+import keras
 
 import warnings
 warnings.filterwarnings('ignore', '.*output shape of zoom.*')
@@ -98,3 +100,36 @@ class Augmentor:
             X_array = X_array.reshape((*X_array.shape, 1))
             Y_array = np.array(current_batch_y)
             yield (X_array, Y_array)
+
+    def augmentation_sequence(self, batch_size, get_x, get_y):
+        return Augmentation_Sequence(self.base_data, batch_size, get_x, get_y)
+
+
+class Augmentation_Sequence(keras.utils.Sequence):
+    def __init__(self, base_data, batch_size, get_x, get_y):
+        self.base_data = base_data
+        self.batch_size = batch_size
+        self.get_x = get_x
+        self.get_y = get_y
+
+    def get_augmentor(self):
+        return Augmentor(self.base_data)
+
+    def __len__(self):
+        return math.ceil(self.get_augmentor().augmented_count / self.batch_size)
+
+    def __getitem__(self, index):
+        start_index_of_batch = index * self.batch_size
+        current_batch_x = []
+        current_batch_y = []
+        for index_in_batch in range(self.batch_size):
+            img_index = start_index_of_batch + index_in_batch
+            if img_index > self.get_augmentor().augmented_count - 1:
+                break
+            point = self.get_augmentor().get_data_point(img_index)
+            current_batch_x.append(self.get_x(point))
+            current_batch_y.append(self.get_y(point))
+        X_array = np.array(current_batch_x)
+        X_array = X_array.reshape((*X_array.shape, 1))
+        Y_array = np.array(current_batch_y)
+        return (X_array, Y_array)

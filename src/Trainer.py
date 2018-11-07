@@ -4,6 +4,7 @@ import pandas as pd
 from keras.callbacks import CSVLogger, ModelCheckpoint
 from keras.models import load_model
 from sklearn.model_selection import KFold
+import multiprocessing
 
 from Augmentation import Augmentor
 from data import load_grape_data
@@ -25,7 +26,7 @@ class Trainer:
         self.session_start = now()
         self.training_time_at_start_of_session = self.training_state['passed_training_time_in_ms']
 
-    def start_training(self, stop_at_ms, epochs, image_number_cap):
+    def start_training(self, stop_at_ms, epochs, image_number_cap, multi_processing):
         self.print_start_summary()
 
         kf = KFold(n_splits=5, shuffle=True, random_state=1)
@@ -49,15 +50,16 @@ class Trainer:
                     print('Training epoch %s already done, skipping' % epoch)
                     continue
 
-                generator = augmentor.augmentation_generator(
+                sequence = augmentor.augmentation_sequence(
                     32, self.get_x, self.get_y)
 
                 start = now()
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=generator, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / 32), epochs=1,
-                                    callbacks=callbacks, validation_data=validation_data)
+                model.fit_generator(generator=sequence, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / 32), epochs=1,
+                                    callbacks=callbacks, validation_data=validation_data,
+                                    use_multiprocessing=multi_processing, workers=multiprocessing.cpu_count())
                 self.training_state['finished_epochs'].add(epoch)
                 self.persist_training_state()
 
