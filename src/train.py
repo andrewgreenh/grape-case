@@ -32,7 +32,7 @@ import argparse
 parser = argparse.ArgumentParser(
     description='Train different models for counting berries on images.')
 
-parser.add_argument('--training-time', default=25*60*1000, type=int,  metavar='ms',
+parser.add_argument('--training-time', default=math.inf, type=int,  metavar='ms',
                     help='Available training time in ms. Model will check this time after each epoch')
 parser.add_argument('--model-name', default='simple', choices=trainers_by_name.keys(),
                     help='Model that should be trained.')
