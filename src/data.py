@@ -99,13 +99,16 @@ def density_map(locations):
     return ndimage.gaussian_filter(locations, sigma=5, mode="constant")
 
 
+i = 0
+
+
 def scale_annotation(annotation, target_size):
     factor = target_size / len(annotation)
     new_annotation = np.zeros((target_size, target_size))
+    print('scaling annotion %s' % i)
+    i++
     for y, x in zip(*np.nonzero(annotation)):
-        print('recomputing %s-%s' % (x, y))
-        new_annotation[int(y * factor)][int(x * factor)
-                                        ] += annotation[y, x]
+        new_annotation[int(y * factor)][int(x * factor)] += annotation[y, x]
     return new_annotation
 
 
