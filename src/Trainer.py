@@ -157,7 +157,7 @@ def _get_data(persistence_directory, image_split, image_size):
         counts = np.load(counts_path)
         locations = np.load(locations_path)
         return images, densities, counts, locations
-    except IOError:
+    except:
         print('persisted data not found, rebuilding...')
         data = load_grape_data(image_split, image_size)
         np.save(images_path, data[0])
@@ -170,5 +170,5 @@ def _get_data(persistence_directory, image_split, image_size):
 def _get_training_state(persistence_directory):
     try:
         return np.load(str(persistence_directory / 'training_state.npy')).item()
-    except IOError:
+    except:
         return {'finished_splits': set(), 'finished_epochs': set(), 'passed_training_time_in_ms': 0}
