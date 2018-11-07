@@ -22,7 +22,7 @@ class Trainer:
         self.data = _get_data(persistence_directory, image_split, image_size)
         self.training_state = _get_training_state(persistence_directory)
 
-    def start_training(self, stop_at_ms):
+    def start_training(self, stop_at_ms, epochs):
         self.print_start_summary()
 
         kf = KFold(n_splits=5, shuffle=True, random_state=1)
@@ -41,7 +41,7 @@ class Trainer:
             callbacks = self.get_callbacks(split)
             augmentor = self.get_augmentor(train)
 
-            for epoch in range(15):
+            for epoch in range(epochs):
                 if epoch in self.training_state['finished_epochs']:
                     print('Training epoch %s already done, skipping' % epoch)
                     continue
@@ -53,7 +53,7 @@ class Trainer:
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.augmented_count / 32 / augmentor.transform_count * 60), epochs=1,
+                model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.augmented_count / 32), epochs=1,
                                     callbacks=callbacks, validation_data=validation_data)
                 self.training_state['finished_epochs'].add(epoch)
                 self.persist_training_state()

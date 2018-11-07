@@ -36,6 +36,8 @@ parser.add_argument('--model-name', default='simple', choices=trainers_by_name.k
                     help='Model that should be trained.')
 parser.add_argument('--persistence-directory', default='./results', type=str,
                     help='Directory where model results and caches are stored.')
+parser.add_argument('--epochs', default=15, type=int,
+                    help='Number of epochs to train')
 
 args = parser.parse_args()
 
@@ -44,6 +46,7 @@ print('Arguments:', args)
 ms_until_stop = args.training_time
 model_name = args.model_name
 persistence_directory = args.persistence_directory
+epochs = args.epochs
 
 from helpers import now
 stop_at_ms = now() + ms_until_stop
@@ -54,4 +57,4 @@ model_directory.resolve()
 
 trainer = trainers_by_name[model_name].get_trainer(model_directory)
 
-trainer.start_training(stop_at_ms)
+trainer.start_training(stop_at_ms, epochs)

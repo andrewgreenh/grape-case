@@ -16,7 +16,9 @@
         "--model-name",
         "simple",
         "--persistence-directory",
-        "./results"
+        "./results",
+        "--epochs",
+        "10"
       ]
     }
   ]
