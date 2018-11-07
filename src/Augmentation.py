@@ -107,13 +107,17 @@ class Augmentor:
 
 class Augmentation_Sequence(keras.utils.Sequence):
     def __init__(self, base_data, batch_size, get_x, get_y):
+        self.augmentor = None
         self.base_data = base_data
         self.batch_size = batch_size
         self.get_x = get_x
         self.get_y = get_y
 
     def get_augmentor(self):
-        return Augmentor(self.base_data)
+        if self.augmentor is None:
+            self.augmentor = Augmentor(self.base_data)
+
+        return self.augmentor
 
     def __len__(self):
         return math.ceil(self.get_augmentor().augmented_count / self.batch_size)
