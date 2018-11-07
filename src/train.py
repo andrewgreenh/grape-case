@@ -58,7 +58,9 @@ stop_at_ms = now() + ms_until_stop
 
 model_directory = Path(persistence_directory) / model_name
 model_directory.mkdir(parents=True, exist_ok=True)
-model_directory.resolve()
+model_directory = model_directory.resolve()
+
+print(model_directory)
 
 trainer = trainers_by_name[model_name].get_trainer(model_directory)
 

@@ -10,18 +10,7 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
-      "args": [
-        "--training-time",
-        "180000",
-        "--model-name",
-        "simple",
-        "--persistence-directory",
-        "./results",
-        "--epochs",
-        "10",
-        "--image-number-cap",
-        "800"
-      ]
+      "args": ["--model-name", "simple", "--persistence-directory", "./results", "--epochs", "10"]
     }
   ]
 }
