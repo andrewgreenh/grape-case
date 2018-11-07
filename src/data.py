@@ -65,6 +65,7 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
             _data_pairs_cache = list(map(load_files, file_pairs))
         return _data_pairs_cache
 
+    print('Loading data pairs.')
     data_pairs = load_data_pairs()
 
     images, locations = map(np.array, zip(*data_pairs))
@@ -78,13 +79,17 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
     def scale(img): return resize(img, (target_img_size, target_img_size),
                                   anti_aliasing=True, mode='constant')
 
+    print('Scaling images')
     # Split images into equal sized blocks
     images = np.array([scale(block)
                        for img in images for block in to_blocks(img)])
 
+    print('Scaling annotations')
     locations = np.array(
         [scale_annotation(block, target_img_size) for loc in locations for block in to_blocks(loc)])
+    print('Computing density')
     density = np.array([density_map(loc) for loc in locations])
+    print('Computing counts')
     counts = np.sum(locations, axis=(1, 2))
 
     return images, density, counts, locations

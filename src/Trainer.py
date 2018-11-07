@@ -160,6 +160,7 @@ def _get_data(persistence_directory, image_split, image_size):
     except IOError:
         print('persisted data not found, rebuilding...')
         data = load_grape_data(image_split, image_size)
+        print('Data loaded, persisting for reuse')
         np.save(images_path, data[0])
         np.save(densities_path, data[1])
         np.save(counts_path, data[2])
