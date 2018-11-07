@@ -1,7 +1,3 @@
-from helpers import now
-ms_until_stop = 25 * 60 * 1000
-stop_at_ms = now() + ms_until_stop
-
 from numpy.random import seed
 seed(1)
 from tensorflow import set_random_seed
@@ -28,12 +24,34 @@ trainers_by_name = {
     'wang_split': wang_split_trainer,
 }
 
-name = 'simple'
 
-model_directory = Path(__file__).parent.parent / 'results' / name
+import argparse
+
+parser = argparse.ArgumentParser(
+    description='Train different models for counting berries on images.')
+
+parser.add_argument('--training-time', default=25*60*1000, type=int,  metavar='ms',
+                    help='Available training time in ms. Model will check this time after each epoch')
+parser.add_argument('--model-name', default='simple', choices=trainers_by_name.keys(),
+                    help='Model that should be trained.')
+parser.add_argument('--persistence-directory', default='./results', type=str,
+                    help='Directory where model results and caches are stored.')
+
+args = parser.parse_args()
+
+print('Arguments:', args)
+
+ms_until_stop = args.training_time
+model_name = args.model_name
+persistence_directory = args.persistence_directory
+
+from helpers import now
+stop_at_ms = now() + ms_until_stop
+
+model_directory = Path(persistence_directory) / model_name
 model_directory.mkdir(parents=True, exist_ok=True)
 model_directory.resolve()
 
-trainer = trainers_by_name[name].get_trainer(model_directory)
+trainer = trainers_by_name[model_name].get_trainer(model_directory)
 
 trainer.start_training(stop_at_ms)
