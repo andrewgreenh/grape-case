@@ -106,7 +106,7 @@ def scale_annotation(annotation, target_size):
     factor = target_size / len(annotation)
     new_annotation = np.zeros((target_size, target_size))
     print('scaling annotion %s' % i)
-    i++
+    i += 1
     for y, x in zip(*np.nonzero(annotation)):
         new_annotation[int(y * factor)][int(x * factor)] += annotation[y, x]
     return new_annotation
