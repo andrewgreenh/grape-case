@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from keras.callbacks import CSVLogger, ModelCheckpoint
@@ -21,8 +22,10 @@ class Trainer:
         self.persistence_directory = persistence_directory
         self.data = _get_data(persistence_directory, image_split, image_size)
         self.training_state = _get_training_state(persistence_directory)
+        self.session_start = now()
+        self.training_time_at_start_of_session = self.training_state['passed_training_time_in_ms']
 
-    def start_training(self, stop_at_ms, epochs):
+    def start_training(self, stop_at_ms, epochs, image_number_cap):
         self.print_start_summary()
 
         kf = KFold(n_splits=5, shuffle=True, random_state=1)
@@ -53,7 +56,7 @@ class Trainer:
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=generator, steps_per_epoch=int(augmentor.augmented_count / 32), epochs=1,
+                model.fit_generator(generator=generator, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / 32), epochs=1,
                                     callbacks=callbacks, validation_data=validation_data)
                 self.training_state['finished_epochs'].add(epoch)
                 self.persist_training_state()
@@ -65,6 +68,7 @@ class Trainer:
                 if how_many_epochs_remaining < 3:
                     print('No time left, aborting after epoch %s in split %s' %
                           (epoch, split))
+                    print('Training state:', self.training_state)
                     return
                 else:
                     print('%s epochs time remaining, continuing' %
@@ -77,6 +81,8 @@ class Trainer:
             self.training_state['finished_epochs'] = set()
             self.persist_training_state()
             split += 1
+
+        print('Done! Training state:', self.training_state)
 
     def print_start_summary(self):
         last_epoch = max(self.training_state['finished_epochs']) if len(
@@ -133,6 +139,9 @@ class Trainer:
         print('Persisting split validation predictions done.')
 
     def persist_training_state(self):
+        trained_in_this_session = now() - self.session_start
+        self.training_state['passed_training_time_in_ms'] = self.training_time_at_start_of_session + \
+            trained_in_this_session
         np.save(str(self.persistence_directory /
                     'training_state.npy'), self.training_state)
 
@@ -162,4 +171,4 @@ def _get_training_state(persistence_directory):
     try:
         return np.load(str(persistence_directory / 'training_state.npy')).item()
     except IOError:
-        return {'finished_splits': set(), 'finished_epochs': set()}
+        return {'finished_splits': set(), 'finished_epochs': set(), 'passed_training_time_in_ms': 0}

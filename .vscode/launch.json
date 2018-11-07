@@ -12,13 +12,15 @@
       "console": "integratedTerminal",
       "args": [
         "--training-time",
-        "1500000",
+        "180000",
         "--model-name",
         "simple",
         "--persistence-directory",
         "./results",
         "--epochs",
-        "10"
+        "10",
+        "--image-number-cap",
+        "800"
       ]
     }
   ]

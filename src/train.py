@@ -11,7 +11,9 @@ import models.marsden.trainer as marsden_trainer
 import models.marsden.split_trainer as marsden_split_trainer
 import models.wang.trainer as wang_trainer
 import models.wang.split_trainer as wang_split_trainer
+
 from pathlib import Path
+import math
 
 trainers_by_name = {
     'simple': simple_trainer,
@@ -38,6 +40,8 @@ parser.add_argument('--persistence-directory', default='./results', type=str,
                     help='Directory where model results and caches are stored.')
 parser.add_argument('--epochs', default=15, type=int,
                     help='Number of epochs to train')
+parser.add_argument('--image-number-cap', default=math.inf,
+                    type=int, help="Max. Number of images to train on per epoch")
 
 args = parser.parse_args()
 
@@ -47,6 +51,7 @@ ms_until_stop = args.training_time
 model_name = args.model_name
 persistence_directory = args.persistence_directory
 epochs = args.epochs
+image_number_cap = args.image_number_cap
 
 from helpers import now
 stop_at_ms = now() + ms_until_stop
@@ -57,4 +62,4 @@ model_directory.resolve()
 
 trainer = trainers_by_name[model_name].get_trainer(model_directory)
 
-trainer.start_training(stop_at_ms, epochs)
+trainer.start_training(stop_at_ms, epochs, image_number_cap)
