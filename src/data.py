@@ -103,6 +103,7 @@ i = 0
 
 
 def scale_annotation(annotation, target_size):
+    global i
     factor = target_size / len(annotation)
     new_annotation = np.zeros((target_size, target_size))
     print('scaling annotion %s' % i)
