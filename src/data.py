@@ -42,7 +42,7 @@ def load_grape_data(sub_img_count=1, target_img_size=300):
 
     def load_annotations(path, img):
         file = open(str(path))
-        annotations = np.empty(img.shape[:2])
+        annotations = np.zeros(img.shape[:2])
         for line in file:
             x, y = line.split(' ')
             annotations[int(y), int(x)] = 1
@@ -99,15 +99,9 @@ def density_map(locations):
     return ndimage.gaussian_filter(locations, sigma=5, mode="constant")
 
 
-i = 0
-
-
 def scale_annotation(annotation, target_size):
-    global i
     factor = target_size / len(annotation)
     new_annotation = np.zeros((target_size, target_size))
-    print('scaling annotion %s' % i)
-    i += 1
     for y, x in zip(*np.nonzero(annotation)):
         new_annotation[int(y * factor)][int(x * factor)] += annotation[y, x]
     return new_annotation
