@@ -15,6 +15,8 @@ import models.wang.split_trainer as wang_split_trainer
 from pathlib import Path
 import math
 
+from helpers import now, str2bool
+
 trainers_by_name = {
     'simple': simple_trainer,
     'simple_split': simple_split_trainer,
@@ -38,11 +40,9 @@ parser.add_argument('--model-name', default='simple', choices=trainers_by_name.k
                     help='Model that should be trained.')
 parser.add_argument('--persistence-directory', default='./results', type=str,
                     help='Directory where model results and caches are stored.')
-parser.add_argument('--epochs', default=15, type=int,
+parser.add_argument('--epochs', default=100, type=int,
                     help='Number of epochs to train')
-parser.add_argument('--image-number-cap', default=math.inf,
-                    type=int, help="Max. Number of images to train on per epoch")
-parser.add_argument('--multi-processing', default=False, type=bool,
+parser.add_argument('--multi-processing', default=False, type=str2bool,
                     help="Should multithreading be used for data augmentation")
 
 args = parser.parse_args()
@@ -53,10 +53,9 @@ ms_until_stop = args.training_time
 model_name = args.model_name
 persistence_directory = args.persistence_directory
 epochs = args.epochs
-image_number_cap = args.image_number_cap
 multi_processing = args.multi_processing
 
-from helpers import now
+
 stop_at_ms = now() + ms_until_stop
 
 model_directory = Path(persistence_directory) / model_name
@@ -67,4 +66,4 @@ print(model_directory)
 
 trainer = trainers_by_name[model_name].get_trainer(model_directory)
 
-trainer.start_training(stop_at_ms, epochs, image_number_cap, multi_processing)
+trainer.start_training(stop_at_ms, epochs, multi_processing)

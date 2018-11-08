@@ -16,11 +16,9 @@
         "--persistence-directory",
         "./results",
         "--epochs",
-        "10",
+        "100",
         "--multi-processing",
-        "0",
-        "--max-batch-count",
-        "100"
+        "0"
       ]
     }
   ]

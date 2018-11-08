@@ -8,15 +8,44 @@ import warnings
 warnings.filterwarnings('ignore', '.*output shape of zoom.*')
 
 
+rotation_steps = np.array([3, 5, 9, 13, 15, 17, 21])
+zoom_steps = np.array([1, 3, 4, 5, 4, 5, 5])
+x_crop_steps = np.array([1, 2, 4, 4, 5, 5, 5])
+y_crop_steps = np.array([1, 2, 4, 4, 5, 5, 5])
+
+factors = rotation_steps * zoom_steps * x_crop_steps * y_crop_steps * 2
+
+
+def get_transformation_intensity_index(factor):
+    global factors
+    if factor > factors[-1]:
+        return len(factors) - 1
+    return np.argmax(factors > factor)
+
+
 class Augmentor:
-    def __init__(self, base_data):
+    def __init__(self, base_data, target_image_count):
+        global rotation_steps, zoom_steps, x_crop_steps, y_crop_steps
+
         self.base_data = base_data
-        self.rotation_transforms = [self.rotate(deg) for deg in range(-10, 11)]
+        self.base_data_count = len(base_data[0])
+        self.target_image_count = target_image_count
+
+        print('target_image_count', target_image_count)
+
+        factor = target_image_count / self.base_data_count
+
+        print('desired augmentation factor', factor)
+
+        transform_indensity_index = get_transformation_intensity_index(factor)
+
+        self.rotation_transforms = [self.rotate(
+            deg) for deg in np.linspace(-10, 10, rotation_steps[transform_indensity_index])]
         self.flip_transforms = [self.flip(True), self.flip(False)]
         self.zoom_and_crop_transforms = []
-        for zoom_percentage in range(0, 41, 10):
-            for x_crop_location_percentage in range(0, 101, 25):
-                for y_crop_location_percentage in range(0, 101, 25):
+        for zoom_percentage in np.linspace(0, 40, zoom_steps[transform_indensity_index]):
+            for x_crop_location_percentage in np.linspace(0, 100, x_crop_steps[transform_indensity_index]):
+                for y_crop_location_percentage in np.linspace(0, 100, x_crop_steps[transform_indensity_index]):
                     self.zoom_and_crop_transforms.append(
                         self.zoom_and_crop(1 + zoom_percentage / 100, x_crop_location_percentage / 100, y_crop_location_percentage / 100))
 
@@ -28,7 +57,7 @@ class Augmentor:
             [self.rotate(-10), self.rotate(10)],
             [self.zoom_and_crop(1.4, 0, 0), self.zoom_and_crop(1.4, 1, 1)],
         ]
-        self.base_data_count = len(self.base_data[0])
+
         self.augmented_count = self.base_data_count * self.transform_count
 
     def rotate(self, deg):
@@ -82,25 +111,26 @@ class Augmentor:
         return t_image, t_density, t_count, t_locations
 
     def augmentation_sequence(self, batch_size, get_x, get_y):
-        return Augmentation_Sequence(self.base_data, batch_size, get_x, get_y)
+        return Augmentation_Sequence(self.base_data, self.target_image_count, batch_size, get_x, get_y)
 
 
 class Augmentation_Sequence(keras.utils.Sequence):
-    def __init__(self, base_data, batch_size, get_x, get_y):
+    def __init__(self, base_data, target_image_count, batch_size, get_x, get_y):
         self.augmentor = None
         self.base_data = base_data
+        self.target_image_count = target_image_count
         self.batch_size = batch_size
         self.get_x = get_x
         self.get_y = get_y
 
     def get_augmentor(self):
         if self.augmentor is None:
-            self.augmentor = Augmentor(self.base_data)
+            self.augmentor = Augmentor(self.base_data, self.target_image_count)
 
         return self.augmentor
 
     def __len__(self):
-        return math.ceil(self.get_augmentor().augmented_count / self.batch_size)
+        return math.ceil(min(self.get_augmentor().augmented_count, self.target_image_count) / self.batch_size)
 
     def __getitem__(self, index):
         start_index_of_batch = index * self.batch_size

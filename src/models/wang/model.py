@@ -5,6 +5,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2
 shape = (227, 227, 1)
 
 batch_size = 32
+ms_per_batch = 225
 
 
 def build_model():

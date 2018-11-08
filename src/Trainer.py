@@ -5,6 +5,7 @@ from keras.callbacks import CSVLogger, ModelCheckpoint
 from keras.models import load_model
 from sklearn.model_selection import KFold
 import multiprocessing
+from BetterModelCallback import BetterModelCallback
 
 from Augmentation import Augmentor
 from data import load_grape_data
@@ -12,10 +13,11 @@ from helpers import now
 
 
 class Trainer:
-    def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, batch_size, get_x, get_y, get_count_from_y, custom_objects={}):
+    def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, batch_size, ms_per_batch, get_x, get_y, get_count_from_y, custom_objects={}):
         self.get_data = get_data
         self.build_model = build_model
         self.batch_size = batch_size
+        self.ms_per_batch = ms_per_batch
         self.get_x = get_x
         self.get_y = get_y
         self.get_count_from_y = get_count_from_y
@@ -27,10 +29,10 @@ class Trainer:
         self.session_start = now()
         self.training_time_at_start_of_session = self.training_state['passed_training_time_in_ms']
 
-    def start_training(self, stop_at_ms, epochs, image_number_cap, multi_processing):
+    def start_training(self, stop_at_ms, epochs, multi_processing):
         self.print_start_summary()
 
-        kf = KFold(n_splits=5, shuffle=True, random_state=1)
+        kf = KFold(n_splits=3, shuffle=True, random_state=1)
         split = 0
         for train, test in kf.split(self.data[0]):
             if split in self.training_state['finished_splits']:
@@ -43,8 +45,17 @@ class Trainer:
             validation_data = X[test], Y[test]
 
             model = self.get_model(split)
+
+            def on_better_modal(model, best_value):
+                nonlocal X, Y, train, test, split
+                print('\nNew best model in split %s \n' % split)
+                self.persist_split_counts(model, X, Y, train, test, split)
+                self.persist_split_validation_predictions(
+                    model, X, Y, test, split)
+
             callbacks = self.get_callbacks(split)
-            augmentor = self.get_augmentor(train)
+            callbacks.append(BetterModelCallback(on_better_modal))
+            augmentor = self.get_augmentor(train, epochs)
 
             for epoch in range(epochs):
                 if epoch in self.training_state['finished_epochs']:
@@ -58,7 +69,7 @@ class Trainer:
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=sequence, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / self.batch_size), epochs=1,
+                model.fit_generator(generator=sequence, epochs=1, steps_per_epoch=len(sequence),
                                     callbacks=callbacks, validation_data=validation_data,
                                     use_multiprocessing=multi_processing, workers=multiprocessing.cpu_count())
                 self.training_state['finished_epochs'].add(epoch)
@@ -76,9 +87,6 @@ class Trainer:
                 else:
                     print('%s epochs time remaining, continuing' %
                           how_many_epochs_remaining)
-
-            self.persist_split_counts(model, X, Y, train, test, split)
-            self.persist_split_validation_predictions(model, X, Y, test, split)
 
             self.training_state['finished_splits'].add(split)
             self.training_state['finished_epochs'] = set()
@@ -108,15 +116,27 @@ class Trainer:
             str(self.persistence_directory / ('split-%s-weights.h5' % split)))
         return [logger, last_checkpoint]
 
-    def get_augmentor(self, training_indices):
+    def get_augmentor(self, training_indices, epochs):
         i = training_indices
         images, density, counts, locations = self.data
         training_data = images[i], density[i], counts[i], locations[i]
-        return Augmentor(training_data)
+
+        batch_size = self.batch_size
+        ms_per_batch = self.ms_per_batch
+
+        target_time_to_train_ms = 6 * 60 * 60 * 1000
+
+        target_image_count = target_time_to_train_ms / epochs / ms_per_batch * batch_size
+
+        return Augmentor(base_data=training_data, target_image_count=target_image_count)
 
     def persist_split_counts(self, model, X, Y, train, test, split):
         print('Persisting split counts')
+        start = now()
         Y_pred = model.predict(X)
+        end = now()
+        print('Inference on %s images took %s seconds' %
+              (len(X), (end - start) / 1000))
         pred_count = self.get_count_from_y(Y_pred)
         true_count = self.get_count_from_y(Y)
 
@@ -132,7 +152,7 @@ class Trainer:
 
     def persist_split_validation_predictions(self, model, X, Y, test, split):
         print('Persisting split validation predictions')
-        Y_pred = model.predict(X)
+        Y_pred = model.predict(X[test])
 
         data = np.array([Y, Y_pred])
 
