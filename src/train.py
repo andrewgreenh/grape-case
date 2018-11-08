@@ -3,6 +3,8 @@ seed(1)
 from tensorflow import set_random_seed
 set_random_seed(2)
 
+import change_memory_allocation
+
 import models.simple.trainer as simple_trainer
 import models.simple.split_trainer as simple_split_trainer
 import models.cohen.trainer as cohen_trainer
