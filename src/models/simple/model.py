@@ -5,6 +5,7 @@ from keras.layers.convolutional import (Convolution2D, MaxPooling2D,
 from keras.models import Model
 
 shape = (32, 32, 1)
+batch_size = 32
 
 # Calculated so that 100 epochs take somewhere around 6 hours.
 images_per_epoch = 30720

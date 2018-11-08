@@ -2,7 +2,7 @@ from Trainer import Trainer
 import numpy as np
 from data import scale_annotation, density_map
 
-from .model import build_model, shape
+from .model import build_model, shape, batch_size
 
 _image_split = 16
 _image_size = shape[0]
@@ -37,4 +37,4 @@ def _get_output(locations):
 
 
 def get_trainer(persistence_directory):
-    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, _get_x, _get_y, _get_count_from_y)
+    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, batch_size, _get_x, _get_y, _get_count_from_y)
