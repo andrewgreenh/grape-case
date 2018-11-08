@@ -43,4 +43,4 @@ def _get_count_from_y(Y):
 
 
 def get_trainer(persistence_directory):
-    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, batch_size _get_x, _get_y, _get_count_from_y)
+    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, batch_size, _get_x, _get_y, _get_count_from_y)
