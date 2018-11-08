@@ -12,9 +12,10 @@ from helpers import now
 
 
 class Trainer:
-    def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, get_x, get_y, get_count_from_y, custom_objects={}):
+    def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, batch_size, get_x, get_y, get_count_from_y, custom_objects={}):
         self.get_data = get_data
         self.build_model = build_model
+        self.batch_size = batch_size
         self.get_x = get_x
         self.get_y = get_y
         self.get_count_from_y = get_count_from_y
@@ -51,13 +52,13 @@ class Trainer:
                     continue
 
                 sequence = augmentor.augmentation_sequence(
-                    32, self.get_x, self.get_y)
+                    self.batch_size, self.get_x, self.get_y)
 
                 start = now()
 
                 print('Training epoch %s in split %s' % (epoch, split))
 
-                model.fit_generator(generator=sequence, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / 32), epochs=1,
+                model.fit_generator(generator=sequence, steps_per_epoch=math.ceil(min(augmentor.augmented_count, image_number_cap) / self.batch_size), epochs=1,
                                     callbacks=callbacks, validation_data=validation_data,
                                     use_multiprocessing=multi_processing, workers=multiprocessing.cpu_count())
                 self.training_state['finished_epochs'].add(epoch)

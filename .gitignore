@@ -3,3 +3,5 @@ __pycache__/
 *.hdf5
 *history.txt
 results/
+remote-results/
+remote-results.log
