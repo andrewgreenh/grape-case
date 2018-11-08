@@ -18,7 +18,9 @@
         "--epochs",
         "10",
         "--multi-processing",
-        "False"
+        "0",
+        "--max-batch-count",
+        "100"
       ]
     }
   ]

@@ -81,26 +81,6 @@ class Augmentor:
 
         return t_image, t_density, t_count, t_locations
 
-    def augmentation_generator(self, batch_size, get_x, get_y):
-        current_batch_x = []
-        current_batch_y = []
-        for i in range(self.augmented_count):
-            point = self.get_data_point(i)
-            current_batch_x.append(get_x(point))
-            current_batch_y.append(get_y(point))
-            if (len(current_batch_x) == batch_size):
-                X_array = np.array(current_batch_x)
-                X_array = X_array.reshape((*X_array.shape, 1))
-                Y_array = np.array(current_batch_y)
-                yield (X_array, Y_array)
-                current_batch_x, current_batch_y = [], []
-
-        if (len(current_batch_x) != 0):
-            X_array = np.array(current_batch_x)
-            X_array = X_array.reshape((*X_array.shape, 1))
-            Y_array = np.array(current_batch_y)
-            yield (X_array, Y_array)
-
     def augmentation_sequence(self, batch_size, get_x, get_y):
         return Augmentation_Sequence(self.base_data, batch_size, get_x, get_y)
 
@@ -131,8 +111,10 @@ class Augmentation_Sequence(keras.utils.Sequence):
             if img_index > self.get_augmentor().augmented_count - 1:
                 break
             point = self.get_augmentor().get_data_point(img_index)
+
             current_batch_x.append(self.get_x(point))
             current_batch_y.append(self.get_y(point))
+
         X_array = np.array(current_batch_x)
         X_array = X_array.reshape((*X_array.shape, 1))
         Y_array = np.array(current_batch_y)
