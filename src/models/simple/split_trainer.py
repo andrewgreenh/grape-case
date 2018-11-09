@@ -1,9 +1,9 @@
 from Trainer import Trainer
 import numpy as np
 
-from .model import build_model, shape, custom_objects, batch_size
+from .model import build_model, shape, custom_objects, batch_size, ms_per_batch
 
-_image_split = 16
+_image_split = 4
 _image_size = shape[0]
 
 
@@ -29,4 +29,4 @@ def _get_count_from_y(Y):
 
 
 def get_trainer(persistence_directory):
-    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, batch_size, _get_x, _get_y, _get_count_from_y, custom_objects)
+    return Trainer(persistence_directory, _image_split, _image_size, _get_data, _build_model, batch_size, ms_per_batch, _get_x, _get_y, _get_count_from_y, custom_objects)

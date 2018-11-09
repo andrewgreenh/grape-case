@@ -4,7 +4,7 @@ from data import scale_annotation, density_map
 
 from .model import build_model, shape, batch_size, ms_per_batch
 
-_image_split = 16
+_image_split = 4
 _image_size = shape[0]
 
 

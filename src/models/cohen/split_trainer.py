@@ -6,7 +6,7 @@ from Trainer import Trainer
 
 from .model import build_model, shape, batch_size, ms_per_batch
 
-_image_split = 16
+_image_split = 4
 _image_size = shape[0]
 _receptive_field_size = 32
 
