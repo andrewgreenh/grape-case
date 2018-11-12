@@ -8,6 +8,7 @@ import models.simple.split_trainer as simple_split_trainer
 import models.cohen.trainer as cohen_trainer
 import models.cohen.split_trainer as cohen_split_trainer
 import models.marsden.trainer as marsden_trainer
+import models.marsden_600.trainer as marsden_600_trainer
 import models.marsden.split_trainer as marsden_split_trainer
 import models.wang.trainer as wang_trainer
 import models.wang.split_trainer as wang_split_trainer
@@ -23,6 +24,7 @@ trainers_by_name = {
     'cohen': cohen_trainer,
     'cohen_split': cohen_split_trainer,
     'marsden': marsden_trainer,
+    'marsden_600': marsden_600_trainer,
     'marsden_split': marsden_split_trainer,
     'wang': wang_trainer,
     'wang_split': wang_split_trainer,
