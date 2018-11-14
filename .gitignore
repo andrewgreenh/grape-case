@@ -1,7 +1,6 @@
 __pycache__/
 *.npy
+*.npy.*
 *.hdf5
-*history.txt
-results/
-remote-results/
-remote-results.log
+/results/
+/remote-results.log
