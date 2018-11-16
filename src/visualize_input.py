@@ -7,7 +7,7 @@ from Augmentation import Augmentor
 
 
 def showcase_base_data(data):
-    X, Y, _ = data
+    X, Y, _, _ = data
 
     picture_count = 9
     pictures_per_row = int(picture_count ** 0.5)
@@ -27,9 +27,9 @@ def showcase_base_data(data):
 
 
 def showcase_split_data(data):
-    X, Y, _ = data
+    X, Y, _, _ = data
 
-    picture_count = 16
+    picture_count = 4
     pictures_per_row = int(picture_count ** 0.5)
 
     _, subplots = plt.subplots(
@@ -45,7 +45,7 @@ def showcase_split_data(data):
 
 
 def showcase_augmentations(augmentor):
-    X, Y, _ = augmentor.base_data
+    X, Y, _, _ = augmentor.base_data
     print('%s transformations generate %s annotated images.' %
           (augmentor.transform_count, augmentor.transform_count * len(X)))
 
@@ -64,7 +64,7 @@ def showcase_augmentations(augmentor):
 
 
 def showcase_base_data_counts(data):
-    _, _, Y_counts = data
+    _, _, Y_counts, _ = data
 
     counts = np.sort(Y_counts)
     min = 0
@@ -97,7 +97,7 @@ print(full_pictures[2].shape)
 
 
 print('Loading split pictures...')
-split_pictures = load_grape_data(16)
+split_pictures = load_grape_data(4)
 
 print(
     '%s images with %s annotations loaded. (ø%s)' % (len(split_pictures[0]), np.sum(split_pictures[2]), int(np.sum(split_pictures[2]) / len(split_pictures[0]))))
@@ -112,5 +112,5 @@ showcase_base_data_counts(full_pictures)
 showcase_split_data(split_pictures)
 showcase_base_data_counts(split_pictures)
 
-augmentor = Augmentor(full_pictures)
+augmentor = Augmentor(full_pictures, 500000)
 showcase_augmentations(augmentor)
