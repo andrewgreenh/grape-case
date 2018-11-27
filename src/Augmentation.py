@@ -7,7 +7,8 @@ import keras
 import warnings
 warnings.filterwarnings('ignore', '.*output shape of zoom.*')
 
-
+# Each array contains 7 levels of augmentation strength. When a lower factor is needed
+# earlier step counts are taken from the arrays.
 rotation_steps = np.array([3, 5, 9, 13, 15, 17, 21])
 zoom_steps = np.array([1, 3, 4, 5, 4, 5, 5])
 x_crop_steps = np.array([1, 2, 4, 4, 5, 5, 5])
@@ -23,6 +24,8 @@ def get_transformation_intensity_index(factor):
     return np.argmax(factors > factor)
 
 
+# This class implements the data augmentation. Simply hand over the base data and a target image count
+# and this class will be setup enhance the training data with slightly changed images
 class Augmentor:
     def __init__(self, base_data, target_image_count):
         global rotation_steps, zoom_steps, x_crop_steps, y_crop_steps
@@ -60,12 +63,15 @@ class Augmentor:
 
         self.augmented_count = self.base_data_count * self.transform_count
 
+    # Factory of a transformation function that will rotate an image
     def rotate(self, deg):
         return lambda img: ndimage.rotate(img, deg, reshape=False)
 
+    # Factory of a transformation function that will flip an image
     def flip(self, should_flip):
         return lambda img: img if should_flip else np.fliplr(img)
 
+    # Factory of a transformation function that will zoom and crop an image
     def zoom_and_crop(self, zoom, xoffset, yoffset):
         def apply_zoom_and_crop(img):
             zoom_levels = [zoom, zoom, 1] if len(
@@ -83,6 +89,7 @@ class Augmentor:
                 return zoomed[yoffset_px:yoffset_px + initial_height, xoffset_px: xoffset_px + initial_width]
         return apply_zoom_and_crop
 
+    # Get the transformation that is used for the image at an index
     def get_transformation(self, index):
         flip_index = index % len(self.flip_transforms)
         rotation_index = int(index / len(self.flip_transforms)
@@ -95,6 +102,7 @@ class Augmentor:
 
         return lambda img: flip_tranform(rotation_transform(zoom_transform(img)))
 
+    # Get the image, the density map, the count and the annotation locations of an index
     def get_data_point(self, index):
         img_index = index % self.base_data_count
         t_index = int(index / self.base_data_count)
@@ -110,10 +118,12 @@ class Augmentor:
 
         return t_image, t_density, t_count, t_locations
 
+    # Return a sequence that can be used by keras.model.fit_generator.
     def augmentation_sequence(self, batch_size, get_x, get_y):
         return Augmentation_Sequence(self.base_data, self.target_image_count, batch_size, get_x, get_y)
 
 
+# Sequence of augmented images that can be used by keras.model.fit_generator
 class Augmentation_Sequence(keras.utils.Sequence):
     def __init__(self, base_data, target_image_count, batch_size, get_x, get_y):
         self.augmentor = None

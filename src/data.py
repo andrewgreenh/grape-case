@@ -11,6 +11,9 @@ _data_pairs_cache = None
 
 data_directory = (Path(__file__).parent / '../data/A').resolve()
 
+# Loads annotated grape data while splitting the images in sub_img_count parts and
+# reducing the final size to target_img_size*target_img_size pixels.
+
 
 def load_grape_data(sub_img_count=1, target_img_size=300):
     """Load the basic annotated images and their respective annotations

@@ -11,9 +11,12 @@ from Augmentation import Augmentor
 from data import load_grape_data
 from helpers import now
 
+# Manages training algorithms with injected strategies for model specific tasks.
+
 
 class Trainer:
     def __init__(self, persistence_directory, image_split, image_size, get_data, build_model, batch_size, ms_per_batch, get_x, get_y, get_count_from_y, custom_objects={}):
+        # Attach all strategies to the instance
         self.get_data = get_data
         self.build_model = build_model
         self.batch_size = batch_size
@@ -25,10 +28,16 @@ class Trainer:
 
         self.persistence_directory = persistence_directory
         self.data = _get_data(persistence_directory, image_split, image_size)
+
+        # Training state is the persisted state of the training session.
+        # This can be used to resume training that was aborted due to time constraints.
         self.training_state = _get_training_state(persistence_directory)
+
+        # Track start time to allow abort or logging of passed time.
         self.session_start = now()
         self.training_time_at_start_of_session = self.training_state['passed_training_time_in_ms']
 
+    # Implementation of the cross validation training process.
     def start_training(self, stop_at_ms, epochs, multi_processing):
         self.print_start_summary()
 
@@ -46,6 +55,7 @@ class Trainer:
 
             model = self.get_model(split)
 
+            # Keras callback that persists counts and validation predictions when a better model is found.
             def on_better_modal(model, best_value):
                 nonlocal X, Y, train, test, split
                 print('\nNew best model in split %s \n' % split)
@@ -75,6 +85,7 @@ class Trainer:
                 self.training_state['finished_epochs'].add(epoch)
                 self.persist_training_state()
 
+                # Check if training should be aborted due to time constraings.
                 stop = now()
                 duration = stop - start
                 remaining_time = stop_at_ms - stop
@@ -88,6 +99,7 @@ class Trainer:
                     print('%s epochs time remaining, continuing' %
                           how_many_epochs_remaining)
 
+            # Update training state after split.
             self.training_state['finished_splits'].add(split)
             self.training_state['finished_epochs'] = set()
             self.persist_training_state()
@@ -124,6 +136,7 @@ class Trainer:
         batch_size = self.batch_size
         ms_per_batch = self.ms_per_batch
 
+        # 6 hours as target time for each split.
         target_time_to_train_ms = 6 * 60 * 60 * 1000
 
         target_image_count = target_time_to_train_ms / epochs / ms_per_batch * batch_size

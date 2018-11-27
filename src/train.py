@@ -18,6 +18,8 @@ import math
 
 from helpers import now, str2bool
 
+
+# Training configuration for different models.
 trainers_by_name = {
     'simple': simple_trainer,
     'simple_split': simple_split_trainer,

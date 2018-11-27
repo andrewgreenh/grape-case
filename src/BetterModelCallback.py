@@ -2,6 +2,7 @@ from keras.callbacks import Callback
 import math
 
 
+# Keras callback that performas a variable action when a better model is found during training.
 class BetterModelCallback(Callback):
     def __init__(self, on_better, best_value=math.inf):
         self.best_value = best_value
